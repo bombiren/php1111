@@ -46,3 +46,22 @@ foreach  ($colors as $color) {
     echo $color . "";
 }
 ?>
+
+<?php
+$product = [ 
+    'name' =>'ojoj',
+    'price' =>'67',
+    'in_stock' =>'2'
+];
+
+echo $product ['name'];
+
+foreach ($product as $key => $value) {
+    echo "$key: $value\n";
+}
+
+?>
+
+
+
+
