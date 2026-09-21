@@ -82,4 +82,10 @@ if(in_array("banan", $fruits)) {
 
 <?php
 
-$user = []
+$user = [
+    "name" => "xdlol",
+    "age" => "21",
+    "city" => "aha"
+];
+print_r(array_keys($user));
+?>
