@@ -62,6 +62,24 @@ foreach ($product as $key => $value) {
 
 ?>
 
+<?php
 
+$numbers = [1,2,3];
+$array_push($numbers,4);
 
+?>
 
+<?php
+$fruits = ["jabłko", "banan", "arbuz"];
+
+if(in_array("banan", $fruits)) {
+    echo "Banan jest w tablicy";
+} else {
+    echo "Banana nie ma w tablicy"
+}
+
+?>
+
+<?php
+
+$user = []
