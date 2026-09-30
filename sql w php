@@ -36,7 +36,7 @@ $wynik = mysqli_query($polaczenie, $sql);
 </form>
 
 <?php
-$sql= "INSERT INTO uzytkownicy (nazwa, email, haslo)
+$sql= "INSERT INTO" uzytkownicy (nazwa, email, haslo)"
 values ('$nazwa',$email','$haslo')";
 
 if(mysqli_query($polaczenie, $sql)) {
@@ -44,7 +44,7 @@ if(mysqli_query($polaczenie, $sql)) {
 } else {
     echo "Błąd" . mysqli_error($polaczenie)
 }
-
+?>
 
 
 </body>
