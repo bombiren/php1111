@@ -1,0 +1,52 @@
+<?php
+$polaczenie = mysqli_connect("localhost", "root", "", "mysqli_example");
+
+echo "Połączono z bazą danych";
+
+if(!$polaczenie) {
+    die("Błąd połączenia: ". mysqli_connect_error());
+}
+?>
+
+<?php
+$sql = "SELECT * FROM uzytkownicy";
+$wynik = mysqli_query($polaczenie, $sql);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+<form method="POST">
+<label>Nazwa</label>
+<input type="text" name="nazwa">
+
+<label>email</label>
+<input type="email" name="email">
+
+<label>haslo</label>
+<input type="password" name="haslo">
+
+<input type="submit" value="Dodaj użytkownika">
+
+</form>
+
+<?php
+$sql= "INSERT INTO uzytkownicy (nazwa, email, haslo)
+values ('$nazwa',$email','$haslo')";
+
+if(mysqli_query($polaczenie, $sql)) {
+    echo "Użytkownik dodany.";
+} else {
+    echo "Błąd" . mysqli_error($polaczenie)
+}
+
+
+
+</body>
+</html>
+    
