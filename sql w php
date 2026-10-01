@@ -21,7 +21,7 @@ $wynik = mysqli_query($polaczenie, $sql);
 </head>
 <body>
 
-<form method="POST">
+<form method="POST" action = "xd.php">
 <label>Nazwa</label>
 <input type="text" name="nazwa">
 
@@ -34,19 +34,23 @@ $wynik = mysqli_query($polaczenie, $sql);
 <input type="submit" value="Dodaj użytkownika">
 
 </form>
-
-<?php
-$sql= "INSERT INTO" uzytkownicy (nazwa, email, haslo)"
-values ('$nazwa',$email','$haslo')";
-
-if(mysqli_query($polaczenie, $sql)) {
-    echo "Użytkownik dodany.";
-} else {
-    echo "Błąd" . mysqli_error($polaczenie)
-}
-?>
-
-
 </body>
 </html>
+<?php
+if($_SERVER['REQUEST_METHOD'] == 'POST'){
+$nazwa = $_POST['nazwa'];
+$email = $_POST['email'];
+$haslo = $_POST['haslo'];
+$sql= "INSERT INTO uzytkownicy (nazwa, email, haslo)
+values ('$nazwa',$email','$haslo')";
+}
+if(mysqli_query($polaczenie, $sql)) {
+    echo "Użytkownik dodany";
+} else {
+    echo "Błąd" . mysqli_error($polaczenie);
+}
+
+?>
+<form>
     
+</form>
