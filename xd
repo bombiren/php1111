@@ -1,0 +1,548 @@
+<?php
+$conn = mysqli_connect("localhost", "root", "", "mysqli_example");
+
+if (!$conn) {
+    die("Błąd połączenia: " . mysqli_connect_error());
+}
+
+mysqli_set_charset($conn, "utf8mb4");
+
+function h($tekst) {
+    return htmlspecialchars((string)$tekst, ENT_QUOTES, "UTF-8");
+}
+
+$zadanie = isset($_GET['zadanie']) ? (int)$_GET['zadanie'] : 1;
+$wynik = null;
+$komunikat = "";
+
+// ZADANIE 14 - CIASTECZKO
+if ($zadanie == 14 && isset($_POST['cookie_id'])) {
+    setcookie("id_uzytkownika", (int)$_POST['cookie_id'], time() + 86400, "/");
+    header("Location: index.php?zadanie=14");
+    exit;
+}
+
+// OBSŁUGA FORMULARZY
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    // ZADANIE 3 - DODAWANIE UŻYTKOWNIKA
+    if (isset($_POST['dodaj_uzytkownika'])) {
+        $nazwa = $_POST['nazwa'];
+        $email = $_POST['email'];
+        $haslo = password_hash($_POST['haslo'], PASSWORD_DEFAULT);
+
+        $stmt = mysqli_prepare($conn,
+            "INSERT INTO uzytkownicy (nazwa, email, haslo) VALUES (?, ?, ?)"
+        );
+
+        mysqli_stmt_bind_param($stmt, "sss", $nazwa, $email, $haslo);
+
+        if (mysqli_stmt_execute($stmt)) {
+            $komunikat = "Użytkownik dodany pomyślnie";
+        }
+    }
+
+    // ZADANIE 4 - AKTUALIZACJA UŻYTKOWNIKA
+    if (isset($_POST['aktualizuj_uzytkownika'])) {
+        $id = (int)$_POST['id'];
+        $nazwa = $_POST['nazwa'];
+        $email = $_POST['email'];
+
+        $stmt = mysqli_prepare($conn,
+            "UPDATE uzytkownicy SET nazwa=?, email=? WHERE id=?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "ssi", $nazwa, $email, $id);
+        mysqli_stmt_execute($stmt);
+
+        $komunikat = "Dane użytkownika zostały zaktualizowane";
+    }
+
+    // ZADANIE 5 - USUWANIE UŻYTKOWNIKA
+    if (isset($_POST['usun_uzytkownika'])) {
+        $id = (int)$_POST['id'];
+
+        $stmt = mysqli_prepare($conn,
+            "DELETE FROM uzytkownicy WHERE id=?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+
+        $komunikat = "Użytkownik został usunięty";
+    }
+
+    // ZADANIE 7 - DODAWANIE PRODUKTU
+    if (isset($_POST['dodaj_produkt'])) {
+        $nazwa = $_POST['nazwa'];
+        $opis = $_POST['opis'];
+        $cena = (float)$_POST['cena'];
+        $kategoria = $_POST['kategoria'];
+
+        $stmt = mysqli_prepare($conn,
+            "INSERT INTO produkty (nazwa, opis, cena, kategoria)
+             VALUES (?, ?, ?, ?)"
+        );
+
+        mysqli_stmt_bind_param($stmt, "ssds",
+            $nazwa, $opis, $cena, $kategoria
+        );
+
+        mysqli_stmt_execute($stmt);
+
+        $komunikat = "Produkt dodany pomyślnie";
+    }
+
+    // ZADANIE 8 - AKTUALIZACJA CENY
+    if (isset($_POST['aktualizuj_cene'])) {
+        $id = (int)$_POST['id'];
+        $cena = (float)$_POST['cena'];
+
+        $stmt = mysqli_prepare($conn,
+            "UPDATE produkty SET cena=? WHERE id=?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "di", $cena, $id);
+        mysqli_stmt_execute($stmt);
+
+        $komunikat = "Cena została zaktualizowana";
+    }
+
+    // ZADANIE 10 - USUWANIE Z KOSZYKA
+    if (isset($_POST['usun_koszyk'])) {
+        $id = (int)$_POST['id_koszyka'];
+
+        $stmt = mysqli_prepare($conn,
+            "DELETE FROM koszyk WHERE id_koszyka=?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+
+        $komunikat = "Produkt usunięty z koszyka";
+    }
+
+    // ZADANIE 13 - USUWANIE HISTORII ZAKUPU
+    if (isset($_POST['usun_zakup'])) {
+        $id = (int)$_POST['id_zakupu'];
+
+        $stmt = mysqli_prepare($conn,
+            "DELETE FROM zakupy WHERE id_zakupu=?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+
+        $komunikat = "Zakup został usunięty";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>PHP - Zadania MySQL</title>
+<style>
+body {
+    font-family: Arial;
+    margin: 30px;
+    background: #f4f4f4;
+}
+nav {
+    margin-bottom: 20px;
+}
+nav a {
+    display: inline-block;
+    padding: 8px;
+    margin: 3px;
+    background: #ddd;
+    color: black;
+    text-decoration: none;
+}
+nav a:hover {
+    background: #bbb;
+}
+table {
+    border-collapse: collapse;
+    background: white;
+}
+td, th {
+    border: 1px solid black;
+    padding: 8px;
+}
+input, textarea, button {
+    margin: 5px;
+    padding: 7px;
+}
+</style>
+</head>
+<body>
+
+<h1>Zadania PHP i MySQL</h1>
+
+<nav>
+<?php
+for ($i = 1; $i <= 14; $i++) {
+    echo '<a href="index.php?zadanie=' . $i . '">Zadanie ' . $i . '</a>';
+}
+?>
+</nav>
+
+<?php
+if ($komunikat != "") {
+    echo "<p><b>" . h($komunikat) . "</b></p>";
+}
+?>
+
+<?php
+
+// ZADANIE 1
+if ($zadanie == 1) {
+    echo "Połączono z bazą danych";
+}
+
+// ZADANIE 2
+if ($zadanie == 2) {
+    $wynik = mysqli_query($conn, "SELECT * FROM uzytkownicy");
+
+    echo "<h2>Lista użytkowników</h2>";
+    echo "<table><tr><th>ID</th><th>Nazwa</th><th>E-mail</th></tr>";
+
+    while ($row = mysqli_fetch_assoc($wynik)) {
+        echo "<tr>
+        <td>".h($row['id'])."</td>
+        <td>".h($row['nazwa'])."</td>
+        <td>".h($row['email'])."</td>
+        </tr>";
+    }
+
+    echo "</table>";
+}
+
+// ZADANIE 3
+if ($zadanie == 3) {
+?>
+<h2>Dodaj użytkownika</h2>
+
+<form method="POST">
+    Nazwa: <input type="text" name="nazwa" required><br>
+    E-mail: <input type="email" name="email" required><br>
+    Hasło: <input type="password" name="haslo" required><br>
+    <button name="dodaj_uzytkownika">Dodaj</button>
+</form>
+<?php
+}
+
+// ZADANIE 4
+if ($zadanie == 4) {
+?>
+<h2>Aktualizuj użytkownika</h2>
+
+<form method="POST">
+    ID: <input type="number" name="id" required><br>
+    Nowa nazwa: <input type="text" name="nazwa" required><br>
+    Nowy e-mail: <input type="email" name="email" required><br>
+    <button name="aktualizuj_uzytkownika">Aktualizuj</button>
+</form>
+<?php
+}
+
+// ZADANIE 5
+if ($zadanie == 5) {
+?>
+<h2>Usuń użytkownika</h2>
+
+<form method="POST">
+    ID: <input type="number" name="id" required>
+    <button name="usun_uzytkownika">Usuń</button>
+</form>
+<?php
+}
+
+// ZADANIE 6
+if ($zadanie == 6) {
+    $wynik = mysqli_query($conn,
+        "SELECT * FROM produkty WHERE dostepnosc=1"
+    );
+
+    echo "<h2>Dostępne produkty</h2>";
+    echo "<table><tr><th>ID</th><th>Nazwa</th><th>Cena</th></tr>";
+
+    while ($row = mysqli_fetch_assoc($wynik)) {
+        echo "<tr>
+        <td>".h($row['id'])."</td>
+        <td>".h($row['nazwa'])."</td>
+        <td>".h($row['cena'])." zł</td>
+        </tr>";
+    }
+
+    echo "</table>";
+}
+
+// ZADANIE 7
+if ($zadanie == 7) {
+?>
+<h2>Dodaj produkt</h2>
+
+<form method="POST">
+    Nazwa: <input type="text" name="nazwa" required><br>
+    Opis: <textarea name="opis"></textarea><br>
+    Cena: <input type="number" name="cena" step="0.01" required><br>
+    Kategoria: <input type="text" name="kategoria" required><br>
+    <button name="dodaj_produkt">Dodaj produkt</button>
+</form>
+<?php
+}
+
+// ZADANIE 8
+if ($zadanie == 8) {
+?>
+<h2>Aktualizuj cenę produktu</h2>
+
+<form method="POST">
+    ID produktu: <input type="number" name="id" required><br>
+    Nowa cena: <input type="number" name="cena" step="0.01" required><br>
+    <button name="aktualizuj_cene">Aktualizuj</button>
+</form>
+<?php
+}
+
+// ZADANIE 9
+if ($zadanie == 9) {
+?>
+<h2>Koszyk użytkownika</h2>
+
+<form method="POST">
+    ID użytkownika: <input type="number" name="id_uzytkownika" required>
+    <button name="pokaz_koszyk">Pokaż koszyk</button>
+</form>
+<?php
+    if (isset($_POST['pokaz_koszyk'])) {
+        $id = (int)$_POST['id_uzytkownika'];
+
+        $stmt = mysqli_prepare($conn,
+            "SELECT p.nazwa, p.cena, p.kategoria
+             FROM koszyk k
+             INNER JOIN produkty p ON k.id_produktu=p.id
+             WHERE k.id_uzytkownika=?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+
+        $wynik = mysqli_stmt_get_result($stmt);
+
+        echo "<table><tr><th>Nazwa</th><th>Cena</th><th>Kategoria</th></tr>";
+
+        while ($row = mysqli_fetch_assoc($wynik)) {
+            echo "<tr>
+            <td>".h($row['nazwa'])."</td>
+            <td>".h($row['cena'])." zł</td>
+            <td>".h($row['kategoria'])."</td>
+            </tr>";
+        }
+
+        echo "</table>";
+    }
+}
+
+// ZADANIE 10
+if ($zadanie == 10) {
+?>
+<h2>Usuń produkt z koszyka</h2>
+
+<form method="POST">
+    ID koszyka: <input type="number" name="id_koszyka" required>
+    <button name="usun_koszyk">Usuń</button>
+</form>
+<?php
+}
+
+// ZADANIE 11
+if ($zadanie == 11) {
+?>
+<h2>Historia zakupów użytkownika</h2>
+
+<form method="POST">
+    ID użytkownika: <input type="number" name="id_uzytkownika" required>
+    <button name="historia">Pokaż</button>
+</form>
+<?php
+    if (isset($_POST['historia'])) {
+        $id = (int)$_POST['id_uzytkownika'];
+
+        $stmt = mysqli_prepare($conn,
+            "SELECT z.id_zakupu,
+                    p.nazwa,
+                    z.ilosc,
+                    z.cena_transakcji,
+                    z.cena_transakcji*z.ilosc AS wartosc,
+                    z.data_zakupu
+             FROM zakupy z
+             INNER JOIN produkty p ON z.id_produktu=p.id
+             WHERE z.id_uzytkownika=?
+             ORDER BY z.data_zakupu DESC"
+        );
+
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+
+        $wynik = mysqli_stmt_get_result($stmt);
+
+        echo "<table>
+        <tr>
+        <th>ID zakupu</th>
+        <th>Produkt</th>
+        <th>Ilość</th>
+        <th>Cena transakcji</th>
+        <th>Wartość</th>
+        <th>Data</th>
+        </tr>";
+
+        while ($row = mysqli_fetch_assoc($wynik)) {
+            echo "<tr>
+            <td>".h($row['id_zakupu'])."</td>
+            <td>".h($row['nazwa'])."</td>
+            <td>".h($row['ilosc'])."</td>
+            <td>".h($row['cena_transakcji'])." zł</td>
+            <td>".h($row['wartosc'])." zł</td>
+            <td>".h($row['data_zakupu'])."</td>
+            </tr>";
+        }
+
+        echo "</table>";
+    }
+}
+
+// ZADANIE 12 I 13
+if ($zadanie == 12 || $zadanie == 13) {
+?>
+<h2>Historia zakupów z danego dnia</h2>
+
+<form method="POST">
+    Data: <input type="date" name="data" required>
+    <button name="szukaj">Szukaj</button>
+</form>
+<?php
+    if (isset($_POST['szukaj']) || isset($_POST['usun_zakup'])) {
+
+        $data = $_POST['data'];
+
+        $stmt = mysqli_prepare($conn,
+            "SELECT z.id_zakupu AS id,
+                    z.cena_transakcji*z.ilosc AS wartosc,
+                    z.data_zakupu AS data,
+                    z.ilosc AS ilosc
+             FROM zakupy AS z
+             WHERE DATE(z.data_zakupu)=?
+             ORDER BY z.data_zakupu DESC"
+        );
+
+        mysqli_stmt_bind_param($stmt, "s", $data);
+        mysqli_stmt_execute($stmt);
+
+        $wynik = mysqli_stmt_get_result($stmt);
+
+        echo "<table>
+        <tr>
+        <th>ID zakupu</th>
+        <th>Wartość</th>
+        <th>Data</th>
+        <th>Ilość</th>";
+
+        if ($zadanie == 13) {
+            echo "<th>Usuń</th>";
+        }
+
+        echo "</tr>";
+
+        while ($row = mysqli_fetch_assoc($wynik)) {
+
+            echo "<tr>
+            <td>".h($row['id'])."</td>
+            <td>".h($row['wartosc'])." zł</td>
+            <td>".h($row['data'])."</td>
+            <td>".h($row['ilosc'])."</td>";
+
+            if ($zadanie == 13) {
+                echo "<td>
+                <form method='POST'>
+                    <input type='hidden' name='id_zakupu'
+                    value='".h($row['id'])."'>
+
+                    <input type='hidden' name='data'
+                    value='".h($data)."'>
+
+                    <button name='usun_zakup'>USUŃ</button>
+                </form>
+                </td>";
+            }
+
+            echo "</tr>";
+        }
+
+        echo "</table>";
+    }
+}
+
+// ZADANIE 14
+if ($zadanie == 14) {
+?>
+<h2>Zapisz ID użytkownika w ciasteczku</h2>
+
+<form method="POST">
+    ID użytkownika:
+    <input type="number" name="cookie_id" required>
+    <button type="submit">Zapisz cookie</button>
+</form>
+
+<?php
+    if (isset($_COOKIE['id_uzytkownika'])) {
+
+        $id = (int)$_COOKIE['id_uzytkownika'];
+
+        echo "<h3>Koszyk użytkownika: ".h($id)."</h3>";
+
+        $stmt = mysqli_prepare($conn,
+            "SELECT p.nazwa,
+                    p.cena,
+                    p.kategoria,
+                    k.ilosc
+             FROM koszyk k
+             INNER JOIN produkty p ON k.id_produktu=p.id
+             WHERE k.id_uzytkownika=?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+
+        $wynik = mysqli_stmt_get_result($stmt);
+
+        echo "<table>
+        <tr>
+        <th>Nazwa</th>
+        <th>Cena</th>
+        <th>Kategoria</th>
+        <th>Ilość</th>
+        </tr>";
+
+        while ($row = mysqli_fetch_assoc($wynik)) {
+            echo "<tr>
+            <td>".h($row['nazwa'])."</td>
+            <td>".h($row['cena'])." zł</td>
+            <td>".h($row['kategoria'])."</td>
+            <td>".h($row['ilosc'])."</td>
+            </tr>";
+        }
+
+        echo "</table>";
+
+    } else {
+        echo "Brak ciasteczka. Wybierz ID użytkownika.";
+    }
+}
+?>
+
+</body>
+</html>
